@@ -65,7 +65,6 @@ async function load(payload, result){
     const s1 = store.size;
 
     if(payload.graphURI != undefined) payload.graphURI = scripts.oxigraph.namedNode(payload.graphURI);
-    console.log(payload.graphURI);
 
     try{
         await store.load(payload.triples, payload.mimetype, payload.baseURI, payload.graphURI);
@@ -147,7 +146,7 @@ async function query(payload, result){
     }
     else if(type == "query"){
         const t3 = new Date();
-        const [res, resultCount] = scripts.processQueryResponse(results, queryDetails, payload.responseMimetype);
+        const [res, resultCount] = scripts.processQueryResponse(results, payload.query, queryDetails, payload.responseMimetype);
         result.data = res;
         const t4 = new Date();
 
