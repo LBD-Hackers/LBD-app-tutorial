@@ -4,9 +4,128 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
     <title>My LBD app</title>
 </head>
 <body>
-    <h1>Hello LBD!</h1>
+
+    <!-- Load IFC button (hidden until tools ready) -->
+    <input type="button" role="button" id="load-ifc" value="Load IFC"
+            onclick="document.getElementById('file-input').click()" style="display: none;">
+    <input type="file" accept=".ifc" id="file-input" style="display: none;">
+
+    <!-- Get spaces button (hidden until IFC loaded) -->
+    <button id="get-spaces" style="display: none;">Get spaces</button>
+
+    <script src="https://unpkg.com/jsonld@8.2.0/dist/jsonld.min.js"></script>
+    <script type="importmap">
+        {
+          "imports": {
+            "web-ifc": "https://unpkg.com/web-ifc@0.0.41/web-ifc-api.js",
+            "ifc-lbd": "https://unpkg.com/ifc-lbd@0.3.7/dist/index.js",
+            "async-oxigraph": "https://unpkg.com/async-oxigraph@0.0.5/dist/index.js",
+            "jsonld": "https://unpkg.com/jsonld@8.2.0/dist/jsonld.esm.js",
+            "rxjs": "https://unpkg.com/rxjs@7.5.4/dist/esm/index.js",
+            "tslib": "https://unpkg.com/tslib@2.3.1/tslib.es6.js"
+          }
+        }
+    </script>
+
+    <script type="module">
+        import { LBDParser, ParserSettings } from "ifc-lbd";
+        import { IfcAPI } from "web-ifc";
+        import { AsyncOxigraph } from "async-oxigraph";
+
+        // web-ifc
+        const ifcAPI = new IfcAPI();
+        ifcAPI.SetWasmPath("./assets/");
+
+        // Async Oxigraph
+        const asyncOxigraph = new AsyncOxigraph("./assets/oxigraph/worker.js");
+
+        // First init web-ifc and Oxigraph
+        initWebIFCAndOxigraph();
+
+        // Event listening
+        document.getElementById("file-input").addEventListener("change", ev => processIFC(ev));
+        document.getElementById("get-spaces").addEventListener("click", () => getSpaces());
+
+        // The main function that loads and processes the IFC
+        async function processIFC(ev){
+            
+            // Get file
+            const file = ev.target.files[0];
+
+            // Hide IFC upload button
+            document.getElementById("load-ifc").style.display = "none";
+
+            // Read file content to array buffer
+            const arrayBuffer = await readFile(file);
+            
+            // Load in web-ifc
+            const modelID = ifcAPI.OpenModel(new Uint8Array(arrayBuffer));
+
+            // MODEL IS NOW LOADED AND AVAILABLE IN MEMORY
+            // DO WHATEVER OPRATIONS WHILE YOU HAVE IT
+            console.log("Model loaded");
+
+            // Parse LBD triples
+            console.log("Parsing LBD triples");
+            const settings = new ParserSettings();
+            settings.namespace = "https://my-first-lbd-app.org/projects/1234/";
+            console.log(settings);
+            const lbdParser = new LBDParser(settings);
+            const jsonldTriples = await lbdParser.parse(ifcAPI, modelID);
+
+            // Convert to NQuads
+            const nquads = await jsonld.normalize(jsonldTriples);
+            
+            // Load in in-memory-triplestore
+            await loadInStore(nquads);
+
+            // Always close after use
+            ifcAPI.CloseModel(modelID);
+
+        }
+
+        async function loadInStore(nquads){
+
+            // Load triples
+            await asyncOxigraph.load(nquads, "application/n-quads");
+            
+            // Display button for getting spaces
+            document.getElementById("get-spaces").style.display = "block";
+
+        }
+
+        async function getSpaces(){
+            const query = `PREFIX bot: <https://w3id.org/bot#> 
+            SELECT * 
+            WHERE { ?s a bot:Space }`;
+            const qRes = await asyncOxigraph.query(query);
+            console.log(qRes);
+        }
+
+        async function initWebIFCAndOxigraph(){
+            await Promise.all([
+                asyncOxigraph.init(),
+                ifcAPI.Init()
+            ]);
+            console.log("web-ifc and Oxigraph Ready");
+            document.getElementById("load-ifc").style.display = "block"; // Show button for loading IFC
+        }
+
+        // Helper that takes a file and returns an arrayBuffer as promise
+        async function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader()
+                reader.addEventListener("loadend", (e) => resolve(e.target.result));
+                reader.addEventListener("error", reject);
+                reader.readAsArrayBuffer(file);
+            })
+        }
+
+    </script>
+
 </body>
 </html>
