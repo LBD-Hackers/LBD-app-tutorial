@@ -80,3 +80,5 @@ The `initWebIFCAndOxigraph()` function is defined as an `async` function meaning
 ![Alt text](images/011.png)
 
 If you see this in the console you are good and we can continue to next step where we allow the user to [Load an IFC](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/02_Load_IFC).
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/madsholten)
