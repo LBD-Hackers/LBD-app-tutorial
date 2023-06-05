@@ -27,17 +27,13 @@
         import { IfcAPI } from "web-ifc";
         import { AsyncOxigraph } from "async-oxigraph";
 
-        // web-ifc
+        // Init web-ifc and Oxigraph
         const ifcAPI = new IfcAPI();
-        ifcAPI.SetWasmPath("./assets/");
-
-        // Async Oxigraph
         const asyncOxigraph = new AsyncOxigraph("./assets/oxigraph/worker.js");
-
-        // First init web-ifc and Oxigraph
         initWebIFCAndOxigraph();
 
         async function initWebIFCAndOxigraph(){
+            ifcAPI.SetWasmPath("./assets/");
             await Promise.all([
                 asyncOxigraph.init(),
                 ifcAPI.Init()
