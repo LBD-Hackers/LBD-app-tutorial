@@ -14,9 +14,6 @@
             onclick="document.getElementById('file-input').click()" style="display: none;">
     <input type="file" accept=".ifc" id="file-input" style="display: none;">
 
-    <!-- Get spaces button (hidden until IFC loaded) -->
-    <button id="get-spaces" style="display: none;">Get spaces</button>
-
     <script src="https://unpkg.com/jsonld@8.2.0/dist/jsonld.min.js"></script>
     <script type="importmap">
         {
@@ -36,19 +33,13 @@
         import { IfcAPI } from "web-ifc";
         import { AsyncOxigraph } from "async-oxigraph";
 
-        // web-ifc
-        const ifcAPI = new IfcAPI();
-        ifcAPI.SetWasmPath("./assets/");
-
-        // Async Oxigraph
-        const asyncOxigraph = new AsyncOxigraph("./assets/oxigraph/worker.js");
-
         // First init web-ifc and Oxigraph
+        const ifcAPI = new IfcAPI();
+        const asyncOxigraph = new AsyncOxigraph("./assets/oxigraph/worker.js");
         initWebIFCAndOxigraph();
 
         // Event listening
         document.getElementById("file-input").addEventListener("change", ev => processIFC(ev));
-        document.getElementById("get-spaces").addEventListener("click", () => getSpaces());
 
         // The main function that loads and processes the IFC
         async function processIFC(ev){
@@ -69,44 +60,28 @@
             // DO WHATEVER OPRATIONS WHILE YOU HAVE IT
             console.log("Model loaded");
 
-            // Parse LBD triples
-            console.log("Parsing LBD triples");
+            // PARSE LBD TRIPLES
+
+            // Change settings as you wish. Only need BOT and Products? Another namespace?
             const settings = new ParserSettings();
             settings.namespace = "https://my-first-lbd-app.org/projects/1234/";
             console.log(settings);
-            const lbdParser = new LBDParser(settings);
-            const jsonldTriples = await lbdParser.parse(ifcAPI, modelID);
 
-            // Convert to NQuads
-            const nquads = await jsonld.normalize(jsonldTriples);
-            
-            // Load in in-memory-triplestore
-            await loadInStore(nquads);
+            // Init LBD Parser with these settings
+            const lbdParser = new LBDParser(settings);
+
+            // Run parse method to get JSON-LD RDF
+            console.log("Building LBD triples...");
+            const jsonldTriples = await lbdParser.parse(ifcAPI, modelID);
+            console.log(jsonldTriples);
 
             // Always close after use
             ifcAPI.CloseModel(modelID);
 
         }
 
-        async function loadInStore(nquads){
-
-            // Load triples
-            await asyncOxigraph.load(nquads, "application/n-quads");
-            
-            // Display button for getting spaces
-            document.getElementById("get-spaces").style.display = "block";
-
-        }
-
-        async function getSpaces(){
-            const query = `PREFIX bot: <https://w3id.org/bot#> 
-            SELECT * 
-            WHERE { ?s a bot:Space }`;
-            const qRes = await asyncOxigraph.query(query);
-            console.log(qRes);
-        }
-
         async function initWebIFCAndOxigraph(){
+            ifcAPI.SetWasmPath("./assets/");
             await Promise.all([
                 asyncOxigraph.init(),
                 ifcAPI.Init()
