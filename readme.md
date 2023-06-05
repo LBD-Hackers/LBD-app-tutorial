@@ -39,3 +39,5 @@ Let's edit the title (shown in the browser tab) and add a headline to the page:
 To view the result, right-click the file in the VS Code file explorer and select *"Open with Live Server"*. Now a browser window should open, and you should see the text **Hello LBD!**.
 
 That's it for this step. Let's continue with the next step where we will be [adding some dependencies](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/01_Dependencies).
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/madsholten)
