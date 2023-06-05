@@ -9,8 +9,7 @@
 <body>
 
     <!-- Load IFC button (hidden until tools ready) -->
-    <input type="button" role="button" id="load-ifc" value="Load IFC"
-            onclick="document.getElementById('file-input').click()" style="display: none;">
+    <button id="load-ifc" onclick="document.getElementById('file-input').click()" style="display: none;">Load IFC</button>
     <input type="file" accept=".ifc" id="file-input" style="display: none;">
 
     <script src="https://unpkg.com/jsonld@8.2.0/dist/jsonld.min.js"></script>
