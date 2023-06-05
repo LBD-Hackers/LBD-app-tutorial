@@ -118,3 +118,5 @@ async function processIFC(ev){
 ![Alt text](images/023.png)
 
 In the [next step](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/03_Parse_LBD) we will be using the IFC-LBD parser to get [BOT](https://w3id.org/bot) triples etc.
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/madsholten)
