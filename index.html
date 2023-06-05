@@ -17,13 +17,15 @@
     <!-- Get spaces button (hidden until IFC loaded) -->
     <button id="get-spaces" style="display: none;">Get spaces</button>
 
+    <p id="store-size"></p>
+
     <script src="https://unpkg.com/jsonld@8.2.0/dist/jsonld.min.js"></script>
     <script type="importmap">
         {
           "imports": {
             "web-ifc": "https://unpkg.com/web-ifc@0.0.41/web-ifc-api.js",
             "ifc-lbd": "https://unpkg.com/ifc-lbd@0.3.7/dist/index.js",
-            "async-oxigraph": "https://unpkg.com/async-oxigraph@0.0.5/dist/index.js",
+            "async-oxigraph": "https://unpkg.com/async-oxigraph@0.0.6/dist/index.js",
             "jsonld": "https://unpkg.com/jsonld@8.2.0/dist/jsonld.esm.js",
             "rxjs": "https://unpkg.com/rxjs@7.5.4/dist/esm/index.js",
             "tslib": "https://unpkg.com/tslib@2.3.1/tslib.es6.js"
@@ -36,14 +38,9 @@
         import { IfcAPI } from "web-ifc";
         import { AsyncOxigraph } from "async-oxigraph";
 
-        // web-ifc
-        const ifcAPI = new IfcAPI();
-        ifcAPI.SetWasmPath("./assets/");
-
-        // Async Oxigraph
-        const asyncOxigraph = new AsyncOxigraph("./assets/oxigraph/worker.js");
-
         // First init web-ifc and Oxigraph
+        const ifcAPI = new IfcAPI();
+        const asyncOxigraph = new AsyncOxigraph("./assets/oxigraph/worker.js");
         initWebIFCAndOxigraph();
 
         // Event listening
@@ -73,9 +70,9 @@
             console.log("Parsing LBD triples");
             const settings = new ParserSettings();
             settings.namespace = "https://my-first-lbd-app.org/projects/1234/";
-            console.log(settings);
             const lbdParser = new LBDParser(settings);
             const jsonldTriples = await lbdParser.parse(ifcAPI, modelID);
+            console.log("Got LBD triples");
 
             // Convert to NQuads
             const nquads = await jsonld.normalize(jsonldTriples);
@@ -90,10 +87,12 @@
 
         async function loadInStore(nquads){
 
-            // Load triples
+            // Load triples into the store
             await asyncOxigraph.load(nquads, "application/n-quads");
+
+            getStoreSize();
             
-            // Display button for getting spaces
+            // Display button for getting spaces after loading
             document.getElementById("get-spaces").style.display = "block";
 
         }
@@ -102,11 +101,20 @@
             const query = `PREFIX bot: <https://w3id.org/bot#> 
             SELECT * 
             WHERE { ?s a bot:Space }`;
+            const {data} = await asyncOxigraph.query(query);
+            console.log(data);
+        }
+
+        async function getStoreSize(){
+            const query = `SELECT (COUNT(*) AS ?count) WHERE { ?s ?p ?o }`;
             const qRes = await asyncOxigraph.query(query);
             console.log(qRes);
+            const storeSize = qRes.data.results.bindings[0].count.value;
+            document.getElementById("store-size").innerHTML = `<b>${storeSize} triples</b> in Oxigraph store`;
         }
 
         async function initWebIFCAndOxigraph(){
+            ifcAPI.SetWasmPath("./assets/");
             await Promise.all([
                 asyncOxigraph.init(),
                 ifcAPI.Init()
