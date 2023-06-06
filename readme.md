@@ -11,6 +11,7 @@ If you didn't do the first part, [start here](https://github.com/LBD-Hackers/LBD
 1. [Parse LBD](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/03_Parse_LBD)
 1. [In-memory triplestore](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/04_In-memory_Triplestore)
 1. [Dynamic UI](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/05_Dynamic)
+1. [Load/Save RDF](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/06_Save)
 
 ## 3. Load IFC
 In this step we will be loading an IFC. We add a simple button (no styling for now) to the body of the HTML document above all the script tags. 
