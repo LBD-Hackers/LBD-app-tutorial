@@ -135,6 +135,44 @@ Now we should have a list that changes when the user selects a storey:
 
 ![Alt text](images/053.png)
 
+As a last thing, we adjust the `populateStoreySelect()` function. First of all, we add an optional sub-query that counts the number of spaces for each storey (if any). We add this information in the storey select. Note that we set the value of spaceCount to 0 if the returned value is undefined which will be the case for storeys with no spaces. We also specify that we wish to get information from the first storey in the list.
+
+```javascript
+async function populateStoreySelect(){
+    const query = `PREFIX bot: <https://w3id.org/bot#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+    SELECT ?uri ?name ?spaceCount
+    WHERE { 
+        ?uri a bot:Storey ;
+            rdfs:label ?name
+        OPTIONAL {
+            SELECT ?uri (COUNT(?s) AS ?spaceCount)
+            WHERE{
+                ?uri bot:hasSpace ?s
+            } GROUP BY ?uri
+        }
+    }
+    ORDER BY ?name`;
+    const {data} = await asyncOxigraph.query(query);
+
+    // Add options to storey-select
+    const select = document.getElementById("storey-select");
+    data.results.bindings.forEach((b, i) => {
+        const option = document.createElement('option');
+        const spaceCount = b.spaceCount.value ?? 0;
+        option.text = `${b.name.value} [${spaceCount}]`;
+        option.value = b.uri.value;
+        select.add(option, i);
+
+        // For first option, also get storey data
+        if(i === 0) getStoreyData(b.uri.value);
+    });
+
+    // Display button for getting spaces after loading
+    document.getElementById("storey-select").style.display = "block";
+}
+```
+
 ### Next steps
 This is a very simple app that just demonstrates how you can let a user browse through data contained in a triplestore in a meaningful way. Next steps could include adding some proper styling using CSS and adding some more interesting components like charts, tables or even 3D models. On the data side it would make sense to allow the user to download the store content and just upload this next time so the IFC doesn't need to processed from scratch. You could also use a remote triplestore like [GraphDB](https://graphdb.ontotext.com/) or [RDFox](https://www.oxfordsemantic.tech/product).
 

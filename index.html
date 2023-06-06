@@ -69,6 +69,7 @@
             // Parse LBD triples
             const settings = new ParserSettings();
             settings.namespace = "https://my-first-lbd-app.org/projects/1234/";
+            settings.subsets.FSO = false;
             const lbdParser = new LBDParser(settings);
             const jsonldTriples = await lbdParser.parse(ifcAPI, modelID);
 
@@ -95,19 +96,26 @@
         async function populateStoreySelect(){
             const query = `PREFIX bot: <https://w3id.org/bot#>
             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
-            SELECT DISTINCT ?uri ?name
+            SELECT ?uri ?name ?spaceCount
             WHERE { 
                 ?uri a bot:Storey ;
-                    bot:hasSpace ?s ;
-                    rdfs:label ?name 
-            } ORDER BY ?name`;
+                    rdfs:label ?name
+                OPTIONAL {
+                    SELECT ?uri (COUNT(?s) AS ?spaceCount)
+                    WHERE{
+                        ?uri bot:hasSpace ?s
+                    } GROUP BY ?uri
+                }
+            }
+            ORDER BY ?name`;
             const {data} = await asyncOxigraph.query(query);
-
+            console.log(data)
             // Add options to storey-select
             const select = document.getElementById("storey-select");
             data.results.bindings.forEach((b, i) => {
                 const option = document.createElement('option');
-                option.text = b.name.value;
+                const spaceCount = b.spaceCount.value ?? 0;
+                option.text = `${b.name.value} [${spaceCount}]`;
                 option.value = b.uri.value;
                 select.add(option, i);
 
