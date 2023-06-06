@@ -11,6 +11,7 @@ This repository contains all the code you will be developing. It is structured i
 1. [Parse LBD](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/03_Parse_LBD)
 1. [In-memory triplestore](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/04_In-memory_Triplestore)
 1. [Dynamic UI](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/05_Dynamic)
+1. [Load/Save RDF](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/06_Save)
 
 ## Before we begin
 It is recommended that you do the coding in [VS Code](https://code.visualstudio.com/). We will be coding everythin in vanilla HTML/JavaScript, so no need to install a ⛰️ of tools and languages. Just get the [Live server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension.
