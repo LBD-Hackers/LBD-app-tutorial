@@ -9,104 +9,139 @@ If you didn't do the first part, [start here](https://github.com/LBD-Hackers/LBD
 1. [Dependencies](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/01_Dependencies)
 1. [Load IFC](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/02_Load_IFC)
 1. [Parse LBD](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/03_Parse_LBD)
-1. In-memory triplestore
+1. [In-memory triplestore](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/04_In-memory_Triplestore)
+1. Dynamic UI
 
-## 5. In-memory triplestore
+## 6. Dynamic UI
 
-In this step we will be loading the RDF triples generated in the [previous step](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/03_Parse_LBD) into an Oxigraph in-memory triplestore that runs directly in the browser.
-
-Since Oxigraph doesn't accept JSON-LD we will first need to convert it to NQuads. This can be achieved with the [toRDF() function in jsonld.js](https://www.npmjs.com/package/jsonld#user-content-tordf-n-quads).
-
-```javascript
-const jsonldTriples = await lbdParser.parse(ifcAPI, modelID);
-const nquads = await jsonld.toRDF(doc, {format: 'application/n-quads'});
-console.log(nquads);
-```
-
-![Alt text](images/051.png)
-
-Next, let's define a function that loads the triples into the store and executes another function that gives us the total count of triples in the store and prints the result in the user interface. First add an empty paragraph with id `store-size` after the Load IFC button in the HTML body:
+Instead of having a button that gets spaces and loads these to the console, let's make a dropdown list with all the storeys in the building that has spaces. First we add the select in the HTML body:
 
 ```html
-<p id="store-size"></p>
+<select name="storey-select" id="storey-select">
+</select>
 ```
 
-Then let's define the functions:
+Note that there are no select options yet. These will be populated by the actual storeys in the uploaded IFC. Also be sure that you change the load method so it makes the select visibile instead of the button we just removed.
+
+Next step is to define the method that populates the storey-select. Execute this function as part of the `loadInStore()` function right after the triples are loaded. While I develop I like to use a handy query like the one shown below that will give me all the properties that are available for the storey instances:
 
 ```javascript
-async function loadInStore(nquads){
-    await asyncOxigraph.load(nquads, "application/n-quads");
-    getStoreSize();
-}
-
-async function getStoreSize(){
-
-    // Execute query to get store size
-    const query = `SELECT (COUNT(*) AS ?count) WHERE { ?s ?p ?o }`;
-    const qRes = await asyncOxigraph.query(query);
-    console.log(qRes);
-
-    // Extract result from the JSON formatted query result
-    const storeSize = qRes.data.results.bindings[0].count.value;
-
-    // Update text in HTML paragraph
-    document.getElementById("store-size").innerHTML = `<b>${storeSize} triples</b> in Oxigraph store`;
-}
-```
-
-Execute the `loadInStore()` function right after converting to nquads and you should see the results.
-
-```javascript
-const jsonldTriples = await lbdParser.parse(ifcAPI, modelID);
-const nquads = await jsonld.toRDF(doc, {format: 'application/n-quads'});
-await loadInStore(nquads);
-```
-
-In the console you should now see a result coming from the async oxigraph web worker:
-
-![Alt text](images/052.png)
-
-The query executed in only 37 ms for a store size of +17k triples which is quite acceptable for such a heavy query. Testing with the Schependomlaan IFC model yields ~286k triples and this query executes in ~0.3 s.
-
-In the user interface you should see a text like this:
-
-![Alt text](images/053.png)
-
-Now let's expand on this. Why not display a button once the triples are loaded into the store that executes a specific query like getting all the spaces? First, let's add this (initially hidden) button to the HTML body:
-
-```html
-<button id="get-spaces" style="display: none;">Get spaces</button>
-```
-
-Change the visibility after the triples are loaded into the store:
-```javascript
-document.getElementById("get-spaces").style.display = "block";
-```
-
-Add an event to the button like we did in the [Load IFC](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/02_Load_IFC) step:
-
-```javascript
-document.getElementById("get-spaces").addEventListener("click", () => getSpaces());
-
-async function getSpaces(){
+async function populateStoreySelect(){
     const query = `PREFIX bot: <https://w3id.org/bot#> 
-    SELECT * 
-    WHERE { ?s a bot:Space }`;
+    SELECT DISTINCT ?p
+    WHERE { 
+        ?s a bot:Storey ; 
+            ?p ?o 
+    }`;
     const {data} = await asyncOxigraph.query(query);
     console.log(data);
 }
 ```
 
-Note that in this example I use `const {data} =` to only access the data part (the result of the query). This is a nice little shorthand trick that makes the code cleaner.
+I can see from the list that we have access to a lot of attributes that exist in the model but not something I can expect to find in any model (like `https://my-first-lbd-app.org/projects/1234/elevationPSetRevitConstraints`). Properties like this are extracted from the IFC-LBD property extractor and the used approach can be discussed. For now, let's not depend on it and stick to the well established ones like `rdfs:label`, `bot:hasSpace`,  and `bot:hasElement`.
 
-The user interface should now have the new button:
+We would like to return only storeys that have spaces and we would like to have the name of the storey, so we change the query to this:
 
-![Alt text](images/054.png)
+```sparql
+PREFIX bot: <https://w3id.org/bot#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
 
-And clicking the button should lock the query result to the console:
+SELECT DISTINCT ?uri ?name
+WHERE { 
+    ?uri a bot:Storey ; 
+        bot:hasSpace ?s ;
+        rdfs:label ?name 
+} ORDER BY ?name
+```
 
-![Alt text](images/055.png)
+We do a bit of post-processing of the query result to get a simple list of objects each having a `name` and a `uri` key with string values. For this we use the map function to iterate over the result bindings and return the value of each of the variables:
 
-In the [next step]() we add some more dunamics, sum up what we learned and suggest next steps.
+```javascript
+const {data} = await asyncOxigraph.query(query);
+const storeys = data.results.bindings.map(b => {
+    const name = b.name.value;
+    const uri = b.uri.value;
+    return {uri, name};
+});
+console.log(storeys);
+```
+
+The result should look like this:
+
+![Alt text](images/051.png)
+
+Now where we have confirmed that this works, instead of mapping to an array, we will add options to the `storey-select`. There are more elegant ways to do this with frameworks like [React](https://react.dev/) or [Angular](https://angular.io/), but I promised to do vanilla JS, so here you go. We get a reference to the select element and as we iterate over the binding results we create new select options and assign them to the select element:
+
+```javascript
+const select = document.getElementById("storey-select");
+data.results.bindings.forEach((b, i) => {
+    const option = document.createElement('option');
+    option.text = b.name.value;
+    option.value = b.uri.value;
+    select.add(option, i);
+});
+```
+
+And now we should see something like this:
+
+![Alt text](images/052.png)
+
+Now we need to add an event listener to the `storey-select` and do something when the user selects a storey. Let's first just log the selected URI and query for anything we know about that storey:
+
+```javascript
+document.getElementById("storey-select").addEventListener("change", ev => getStoreyData(ev.target.value));
+
+async function getStoreyData(storeyURI){
+    console.log(storeyURI);
+    const query = `SELECT * WHERE {
+        <${storeyURI}> ?p ?o
+    }`;
+    const {data} = await asyncOxigraph.query(query);
+    console.log(data);
+}
+```
+
+You should see that new results are logged each time the user selects a storey. To keep this example simple, let's just list all the spaces at the storey in an unordered list `<ul>`. Add the following to the HTML body:
+
+```html
+<ul id="space-list"></ul>
+```
+
+And change the `getStoreyData()` function to the below. The query retrieves all spaces in the storey in a list ordered by the name of the space. The unordered list element is retrieved and it's content is wiped by setting its innerHTML to nothing. Then as we iterate over the results we append new list items `<li>` to the list. We set the innerHTML to the name of the space and the id to the URI of that space. We also change the cursor to indicate that it is clickable. When the user clicks we assign an event listener that logs the space id/URI to the console.
+
+```javascript
+async function getStoreyData(storeyURI){
+        const query = `PREFIX bot: <https://w3id.org/bot#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+        SELECT ?space ?name WHERE {
+            <${storeyURI}> bot:hasSpace ?space .
+            ?space rdfs:label ?name
+        } ORDER BY ?name`;
+        const {data} = await asyncOxigraph.query(query, "application/ld+json");
+        const list = document.getElementById("space-list");
+        list.innerHTML = "";
+        data.results.bindings.forEach(b => {
+            const item = document.createElement('li');
+            item.innerHTML = b.name.value;
+            item.id = b.space.value;
+            item.style.cursor = "pointer";
+            item.addEventListener("click", (ev) => console.log(ev.target.id));
+            list.appendChild(item);
+        });
+    }
+```
+
+Now we should have a list that changes when the user selects a storey:
+
+![Alt text](images/053.png)
+
+### Next steps
+This is a very simple app that just demonstrates how you can let a user browse through data contained in a triplestore in a meaningful way. Next steps could include adding some proper styling using CSS and adding some more interesting components like charts, tables or even 3D models. On the data side it would make sense to allow the user to download the store content and just upload this next time so the IFC doesn't need to processed from scratch. You could also use a remote triplestore like [GraphDB](https://graphdb.ontotext.com/) or [RDFox](https://www.oxfordsemantic.tech/product).
+
+You will notice that the code is now starting to become a bit messy, so I would suggest that you use a JavaScript framework for better structure. I use [Angular](https://angular.io/) which is quite opinionated in how things are done which gives recognisability which is a huge plus in my book. It's also easily used with [Material Design](https://material.angular.io/) that includes a ton of nice looking UI components.
+
+If you are to use a 3D model viewer I suggest that you use IFC.js [OpenBIM Components](https://github.com/IFCjs/components). It can be configured to emit the ExpressID when you click any item in the model and you can use that to access information about the component in the graph. You could also imagine a UI where you color or hide/dim elements by some property value.
+
+That's it. Please add an issue if you discover something that doesn't work or if you have suggestions for improvements!
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/madsholten)
