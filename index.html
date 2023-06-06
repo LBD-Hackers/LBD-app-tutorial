@@ -10,8 +10,9 @@
 <body>
 
     <!-- Load IFC button (hidden until tools ready) -->
-    <input type="button" role="button" id="load-ifc" value="Load IFC"
-            onclick="document.getElementById('file-input').click()" style="display: none;">
+    <button id="load-ifc" onclick="document.getElementById('file-input').click()" style="display: none;">
+        Load IFC
+    </button>
     <input type="file" accept=".ifc" id="file-input" style="display: none;">
 
     <!-- Get spaces button (hidden until IFC loaded) -->
@@ -62,21 +63,15 @@
             // Load in web-ifc
             const modelID = ifcAPI.OpenModel(new Uint8Array(arrayBuffer));
 
-            // MODEL IS NOW LOADED AND AVAILABLE IN MEMORY
-            // DO WHATEVER OPRATIONS WHILE YOU HAVE IT
-            console.log("Model loaded");
-
             // Parse LBD triples
-            console.log("Parsing LBD triples");
             const settings = new ParserSettings();
             settings.namespace = "https://my-first-lbd-app.org/projects/1234/";
             const lbdParser = new LBDParser(settings);
             const jsonldTriples = await lbdParser.parse(ifcAPI, modelID);
-            console.log("Got LBD triples");
 
             // Convert to NQuads
             const nquads = await jsonld.normalize(jsonldTriples);
-            
+
             // Load in in-memory-triplestore
             await loadInStore(nquads);
 
