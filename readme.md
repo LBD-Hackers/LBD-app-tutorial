@@ -108,6 +108,6 @@ And clicking the button should lock the query result to the console:
 
 ![Alt text](images/055.png)
 
-In the [next step]() we add some more dunamics, sum up what we learned and suggest next steps.
+In the [next step](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/05_Dynamic) we add some simple user interactions that will trigger queries and UI updates.
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/madsholten)
