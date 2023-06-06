@@ -11,6 +11,7 @@ If you didn't do the first part, [start here](https://github.com/LBD-Hackers/LBD
 1. [Parse LBD](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/03_Parse_LBD)
 1. In-memory triplestore
 1. [Dynamic UI](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/05_Dynamic)
+1. [Load/Save RDF](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/06_Save)
 
 ## 5. In-memory triplestore
 
