@@ -13,7 +13,7 @@ If you didn't do the first part, [start here](https://github.com/LBD-Hackers/LBD
 1. [Dynamic UI](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/05_Dynamic)
 1. Load/Save RDF
 
-## 7. Save
+## 7. Load/Save RDF
 
 In this step it is demonstrated how you can download the content of the triplestore and give the user the option to either start from an IFC (requires parsing = slow) or simply directly from the RDF downloaded from another session. Oxigraph also supports update queries, so the in the app you could even allow the user to make changes that will all be included when saving RDF.
 
