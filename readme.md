@@ -11,6 +11,7 @@ If you didn't do the first part, [start here](https://github.com/LBD-Hackers/LBD
 1. [Parse LBD](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/03_Parse_LBD)
 1. [In-memory triplestore](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/04_In-memory_Triplestore)
 1. Dynamic UI
+1. [Load/Save RDF](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/06_Save)
 
 ## 6. Dynamic UI
 
@@ -173,13 +174,6 @@ async function populateStoreySelect(){
 }
 ```
 
-### Next steps
-This is a very simple app that just demonstrates how you can let a user browse through data contained in a triplestore in a meaningful way. Next steps could include adding some proper styling using CSS and adding some more interesting components like charts, tables or even 3D models. On the data side it would make sense to allow the user to download the store content and just upload this next time so the IFC doesn't need to processed from scratch. You could also use a remote triplestore like [GraphDB](https://graphdb.ontotext.com/) or [RDFox](https://www.oxfordsemantic.tech/product).
-
-You will notice that the code is now starting to become a bit messy, so I would suggest that you use a JavaScript framework for better structure. I use [Angular](https://angular.io/) which is quite opinionated in how things are done which gives recognisability which is a huge plus in my book. It's also easily used with [Material Design](https://material.angular.io/) that includes a ton of nice looking UI components.
-
-If you are to use a 3D model viewer I suggest that you use IFC.js [OpenBIM Components](https://github.com/IFCjs/components). It can be configured to emit the ExpressID when you click any item in the model and you can use that to access information about the component in the graph. You could also imagine a UI where you color or hide/dim elements by some property value.
-
-That's it. Please add an issue if you discover something that doesn't work or if you have suggestions for improvements!
+In the [next step](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/06_Save) it is demonstrated how you can download/upload RDF and persist changes to the store content.
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/madsholten)
