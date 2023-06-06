@@ -4,18 +4,29 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
     <title>My LBD app</title>
 </head>
 <body>
 
     <!-- Load IFC button (hidden until tools ready) -->
-    <button id="load-ifc" onclick="document.getElementById('file-input').click()" style="display: none;">
+    <button id="load-ifc" onclick="document.getElementById('ifc-input').click()" style="display: none;">
         Load IFC
     </button>
-    <input type="file" accept=".ifc" id="file-input" style="display: none;">
+    <input type="file" accept=".ifc" id="ifc-input" style="display: none;">
+    
+    <!-- Load RDF button (hidden until tools ready) -->
+    <button id="load-rdf" onclick="document.getElementById('rdf-input').click()" style="display: none;">
+        Load RDF
+    </button>
+    <input type="file" accept=".nq" id="rdf-input" style="display: none;">
 
-    <!-- Get spaces button (hidden until IFC loaded) -->
+    <!-- Change space names (hidden until IFC or RDF loaded) -->
+    <button id="change-space-names" style="display: none;">Change space names</button>
+
+    <!-- Download button (hidden until IFC or RDF loaded) -->
+    <button id="download" style="display: none;">Download RDF</button>
+
+    <!-- Storey selector (hidden until IFC or RDF loaded) -->
     <select name="storey-select" id="storey-select" style="display: none;">
     </select>
 
@@ -48,8 +59,11 @@
         initWebIFCAndOxigraph();
 
         // Event listening
-        document.getElementById("file-input").addEventListener("change", ev => processIFC(ev));
+        document.getElementById("ifc-input").addEventListener("change", ev => processIFC(ev));
+        document.getElementById("rdf-input").addEventListener("change", ev => loadRDF(ev));
         document.getElementById("storey-select").addEventListener("change", ev => getStoreyData(ev.target.value));
+        document.getElementById("download").addEventListener("click", ev => downloadStoreContent(ev));
+        document.getElementById("change-space-names").addEventListener("click", () => changeSpaceNames());
 
         // The main function that loads and processes the IFC
         async function processIFC(ev){
@@ -57,8 +71,9 @@
             // Get file
             const file = ev.target.files[0];
 
-            // Hide IFC upload button
+            // Hide IFC and RDF upload button
             document.getElementById("load-ifc").style.display = "none";
+            document.getElementById("load-rdf").style.display = "none";
 
             // Read file content to array buffer
             const arrayBuffer = await readFile(file);
@@ -84,10 +99,27 @@
 
         }
 
+        async function loadRDF(ev){
+            // Get file
+            const file = ev.target.files[0];
+            
+            const reader = new FileReader();
+            reader.readAsText(file, "UTF-8");
+            reader.onload = async (evt) => {
+                await loadInStore(evt.target.result);
+                document.getElementById("load-ifc").style.display = "none";
+                document.getElementById("load-rdf").style.display = "none";
+            }
+            reader.onerror = (err) => console.error(err);
+        }
+
         async function loadInStore(nquads){
 
             // Load triples into the store
             await asyncOxigraph.load(nquads, "application/n-quads");
+
+            document.getElementById("download").style.display = "block";
+            document.getElementById("change-space-names").style.display = "block";
 
             await getStoreSize();
             await populateStoreySelect();
@@ -109,7 +141,7 @@
             }
             ORDER BY ?name`;
             const {data} = await asyncOxigraph.query(query);
-            console.log(data)
+
             // Add options to storey-select
             const select = document.getElementById("storey-select");
             data.results.bindings.forEach((b, i) => {
@@ -125,6 +157,25 @@
 
             // Display button for getting spaces after loading
             document.getElementById("storey-select").style.display = "block";
+        }
+
+        async function changeSpaceNames(){
+            // Suffix all space names with _{year}
+            const query = `PREFIX bot: <https://w3id.org/bot#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+            DELETE{
+                ?s rdfs:label ?oldName
+            }
+            INSERT{
+                ?s rdfs:label ?newName
+            }
+            WHERE {
+                BIND(STR( YEAR( NOW() ) ) AS ?year)
+                ?s a bot:Space ;
+                    rdfs:label ?oldName .
+                BIND(CONCAT(?oldName, "_", ?year) AS ?newName)
+            }`;
+            await asyncOxigraph.query(query);
         }
 
         async function getStoreSize(){
@@ -162,6 +213,7 @@
             ]);
             console.log("web-ifc and Oxigraph Ready");
             document.getElementById("load-ifc").style.display = "block"; // Show button for loading IFC
+            document.getElementById("load-rdf").style.display = "block"; // Show button for loading RDF
         }
 
         // Helper that takes a file and returns an arrayBuffer as promise
@@ -172,6 +224,21 @@
                 reader.addEventListener("error", reject);
                 reader.readAsArrayBuffer(file);
             })
+        }
+
+        async function downloadStoreContent(){
+            const {data} = await asyncOxigraph.dump();
+            download("data.nq", data);
+        }
+
+        function download(filename, text) {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:application/n-quads;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
         }
 
     </script>
