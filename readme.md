@@ -14,7 +14,9 @@ If you didn't do the first part, [start here](https://github.com/LBD-Hackers/LBD
 1. [Load/Save RDF](https://github.com/LBD-Hackers/LBD-app-tutorial/tree/06_Save)
 
 ## 3. Load IFC
-In this step we will be loading an IFC. We add a simple button (no styling for now) to the body of the HTML document above all the script tags. 
+In this step we will be loading an IFC. If you don't have one at hand you can use the typical [Duplex model](https://raw.githubusercontent.com/MadsHolten/BOT-Duplex-house/master/Model%20files/IFC/Duplex.ifc).
+
+We add a simple button (no styling for now) to the body of the HTML document above all the script tags. 
 
 ```html
 <button>Load IFC</button>
