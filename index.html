@@ -28,7 +28,7 @@
 
     <script type="module">
         import { LBDParser, ParserSettings } from "ifc-lbd";
-        import { IfcAPI, IFCSPACE } from "web-ifc";
+        import { IfcAPI, IFCRELCONNECTSPATHELEMENTS } from "web-ifc";
         import { AsyncOxigraph } from "async-oxigraph";
 
         // First init web-ifc and Oxigraph
@@ -59,14 +59,11 @@
             console.log("Model loaded");
 
             // To validate, let's get the spaces
-            const spaceIDs = ifcAPI.GetLineIDsWithType(modelID, IFCSPACE);
-            for (let i = 0; i < spaceIDs.size(); i++) {
-                const expressID = spaceIDs.get(i);
-                console.log(`${expressID} is a space`);
-
-                // Get space properties
-                const properties = await ifcAPI.properties.getItemProperties(modelID, expressID);
-                console.log(properties);
+            const relIDs = ifcAPI.GetLineIDsWithType(modelID, IFCRELCONNECTSPATHELEMENTS);
+            console.log(relIDs.size());
+            for (let i = 0; i < relIDs.size(); i++) {
+                const expressID = relIDs.get(i);
+                console.log(expressID);
             }
 
             // Always close after use
