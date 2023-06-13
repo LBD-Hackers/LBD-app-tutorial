@@ -28,7 +28,7 @@
 
     <script type="module">
         import { LBDParser, ParserSettings } from "ifc-lbd";
-        import { IfcAPI, IFCRELCONNECTSPATHELEMENTS } from "web-ifc";
+        import { IfcAPI, IFCRELCONNECTSPATHELEMENTS } from "./assets/web-ifc-api.js";
         import { AsyncOxigraph } from "async-oxigraph";
 
         // First init web-ifc and Oxigraph
@@ -60,15 +60,30 @@
 
             // To validate, let's get the spaces
             const relIDs = ifcAPI.GetLineIDsWithType(modelID, IFCRELCONNECTSPATHELEMENTS);
-            console.log(relIDs.size());
             for (let i = 0; i < relIDs.size(); i++) {
                 const expressID = relIDs.get(i);
-                console.log(expressID);
+                
+                // Get rel properties
+                const properties = await ifcAPI.properties.getItemProperties(modelID, expressID);
+                const relatedElementID = properties.RelatedElement.value;
+                const relatingElementID = properties.RelatingElement.value;
+
+                const [relating, related] = await Promise.all([
+                    getGlobalID(modelID, relatingElementID),
+                    getGlobalID(modelID, relatedElementID)
+                ])
+
+                console.log(`${relating} -> ${related}`);
             }
 
             // Always close after use
             ifcAPI.CloseModel(modelID);
 
+        }
+
+        async function getGlobalID(modelID, expressID){
+            const properties = await ifcAPI.properties.getItemProperties(modelID, expressID);
+            return properties.GlobalId.value;
         }
 
         async function initWebIFCAndOxigraph(){
