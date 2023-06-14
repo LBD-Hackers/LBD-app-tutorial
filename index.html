@@ -12,18 +12,9 @@
     <button id="load-ifc" onclick="document.getElementById('file-input').click()" style="display: none;">Load IFC</button>
     <input type="file" accept=".ifc" id="file-input" style="display: none;">
 
-    <script src="https://unpkg.com/jsonld@8.2.0/dist/jsonld.min.js"></script>
-    <script type="importmap">
-        {
-          "imports": {
-            "web-ifc": "https://unpkg.com/web-ifc@0.0.41/web-ifc-api.js"
-          }
-        }
-    </script>
-
     <script type="module">
 
-        import { IfcAPI, IFCRELCONNECTSPATHELEMENTS } from "web-ifc";
+        import { IfcAPI, IFCRELCONNECTSPATHELEMENTS } from "./assets/web-ifc-fixed.js";
 
         // First init web-ifc and Oxigraph
         const ifcAPI = new IfcAPI();
