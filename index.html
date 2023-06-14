@@ -16,25 +16,18 @@
     <script type="importmap">
         {
           "imports": {
-            "web-ifc": "https://unpkg.com/web-ifc@0.0.41/web-ifc-api.js",
-            "ifc-lbd": "https://unpkg.com/ifc-lbd@0.3.7/dist/index.js",
-            "async-oxigraph": "https://unpkg.com/async-oxigraph@0.0.6/dist/index.js",
-            "jsonld": "https://unpkg.com/jsonld@8.2.0/dist/jsonld.esm.js",
-            "rxjs": "https://unpkg.com/rxjs@7.5.4/dist/esm/index.js",
-            "tslib": "https://unpkg.com/tslib@2.3.1/tslib.es6.js"
+            "web-ifc": "https://unpkg.com/web-ifc@0.0.41/web-ifc-api.js"
           }
         }
     </script>
 
     <script type="module">
-        import { LBDParser, ParserSettings } from "ifc-lbd";
-        import { IfcAPI, IFCRELCONNECTSPATHELEMENTS } from "./assets/web-ifc-api.js";
-        import { AsyncOxigraph } from "async-oxigraph";
+
+        import { IfcAPI, IFCRELCONNECTSPATHELEMENTS } from "web-ifc";
 
         // First init web-ifc and Oxigraph
         const ifcAPI = new IfcAPI();
-        const asyncOxigraph = new AsyncOxigraph("./assets/oxigraph/worker.js");
-        initWebIFCAndOxigraph();
+        initWebIFC();
 
         // Event listening
         document.getElementById("file-input").addEventListener("change", ev => processIFC(ev));
@@ -86,13 +79,10 @@
             return properties.GlobalId.value;
         }
 
-        async function initWebIFCAndOxigraph(){
+        async function initWebIFC(){
             ifcAPI.SetWasmPath("./assets/");
-            await Promise.all([
-                asyncOxigraph.init(),
-                ifcAPI.Init()
-            ]);
-            console.log("web-ifc and Oxigraph Ready");
+            await ifcAPI.Init();
+            console.log("web-ifc Ready");
             document.getElementById("load-ifc").style.display = "block"; // Show button for loading IFC
         }
 
